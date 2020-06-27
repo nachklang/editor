@@ -54,9 +54,6 @@ public:
         auto mini = new QGraphicsWidget;
         mini->setMinimumHeight(actor::BORDER);
         mini->setMinimumWidth(actor::BORDER);
-        //    mini->set
-
-        // grid->addItem(new QGraphicsWidget, 0, 0, Qt::AlignHCenter);
 
         mini->paint(new QPainter, new QStyleOptionGraphicsItem);
         grid->addItem(mini, 0, 1);
@@ -69,7 +66,7 @@ public:
             this,
             &LevelView::onActorActivated);
 
-        for (auto i = 0; i < 15; ++i)
+        for (auto i = 0; i < 10; ++i)
         {
             static auto a = 0.0;
             static auto b = 0.0;
@@ -80,7 +77,7 @@ public:
                 static auto d = 30.0;
 
                 grid->addItem(
-                    new Actor(i, j, QRectF{a, b, c, d}, activatedTracker),
+                    new Actor(i, j, QRectF{a, b, c, d}, activatedTracker, scene),
                     i,
                     j);
                 qDebug() << "i: " << i << "J: " << j;

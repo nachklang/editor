@@ -55,6 +55,14 @@ MainWindow::MainWindow()
     openAct->setShortcuts(QKeySequence::Open);
     openAct->setStatusTip(tr("Open an existing file"));
 //    connect(openAct, &QAction::triggered, this, &MainWindow::open);
+
+//        const QIcon exitIcon = QIcon::fromTheme("application-exit", QIcon(":/images/exit.png"));
+//        QAction *openAct = new QAction(openIcon, tr("&Exit..."), this);
+//        openAct->setShortcuts(QKeySequence::Open);
+//        openAct->setStatusTip(tr("Exit from application"));
+//        connect(openAct, &QAction::triggered, this, &MainWindow::close);
+
+
     fileMenu->addAction(openAct);
     fileToolBar->addAction(openAct);
 //    QAction *aboutQtAct = helpMenu->addAction(tr("About &Qt"), qApp, &QApplication::aboutQt);
