@@ -1,0 +1,19 @@
+{"types":[
+    {
+        "name":"TestTypeWithoutProperties",
+        "iconName":"without.png"
+    },
+    {   "name":"TypeWithEmptyProperties",
+        "iconName":"without2.png",
+        "properties":[]
+    },
+    {
+        "name":"TypeWithOneProperty",
+        "iconName": "one.png",
+        "properties":[{"name":"BooleanProperty",
+                       "type": "boolean"}]
+    }
+    ]
+}
+
+

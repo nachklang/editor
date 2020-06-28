@@ -1,0 +1,7 @@
+{
+"properties":[
+{"name":"TestBooleanProperty", "type":"boolean"},
+{"name":"TestRangedDoubleProperty", "type": "ranged_double",
+"min":0.01, "max": 1.0}]
+}
+

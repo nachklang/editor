@@ -22,7 +22,7 @@ std::shared_ptr<Property> CreateRangedDoubleProperty(const QJsonObject& object, 
 
 }
 
-std::shared_ptr<Property> CreatePropertyFromJson(const QJsonObject &object)
+std::shared_ptr<Property> createPropertyFromJson(const QJsonObject &object)
 {
     if (object.isEmpty())
     {
@@ -30,7 +30,7 @@ std::shared_ptr<Property> CreatePropertyFromJson(const QJsonObject &object)
     }
     else
     {
-        if (object.contains("type"))
+        if (object.contains("type") && object.contains("name"))
         {
             auto type = object.value("type");
             auto name = object.value("name");
@@ -39,11 +39,11 @@ std::shared_ptr<Property> CreatePropertyFromJson(const QJsonObject &object)
             {
                 auto nameAsString = name.toString();
 
-                if (type.toString() == property::type::BOOLEAN)
+                if (type.toString() == property::type::BOOLEAN_TYPE)
                 {
                     return std::make_shared<BooleanProperty>(nameAsString);
                 }
-                else if (type.toString() == property::type::RANGED_DOUBLE)
+                else if (type.toString() == property::type::RANGED_DOUBLE_TYPE)
                 {
                     return CreateRangedDoubleProperty(object, nameAsString);
                 }

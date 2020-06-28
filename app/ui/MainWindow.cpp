@@ -2,6 +2,8 @@
 
 #include "ActorEditor.h"
 #include "LevelView.h"
+#include "editor/ConfigReader.h"
+#include "editor/Property.h"
 
 #include <QApplication>
 #include <QMenu>
@@ -11,6 +13,7 @@
 #include <QToolBar>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QSplitter>
 
 namespace editor {
 
@@ -19,8 +22,37 @@ namespace {
 QWidget* CreateMainWindget()
 {
     auto levelViewLayout = new QHBoxLayout;
-    levelViewLayout->addWidget(new LevelView);
-    levelViewLayout->addWidget(new ActorEditor);
+
+    auto levelView = new LevelView;
+
+    // READ MOCKS
+    //auto actorEditor = new ActorEditor(std::optional<Objects>{});
+    auto reader = ConfigReader{};
+    qDebug() << "App path : " << qApp->applicationDirPath();
+    auto object = reader.createJsonObjectFromFile("test_objects.json");
+    auto types = reader.readObjectsFromJson(object);
+    auto actorEditor = new ActorEditor(types);
+
+    constexpr auto TEST_FILE_NAME = "readProperty.json";
+
+    auto object2 = reader.createJsonObjectFromFile(TEST_FILE_NAME);
+
+    auto properties = reader.readTypeProperties(object2);
+
+    Q_UNUSED(properties)
+    // END MOCKING
+
+
+    levelViewLayout->addWidget(levelView);
+    levelViewLayout->addWidget(new QSplitter);
+    // ReadFromFile
+    levelViewLayout->addWidget(actorEditor);
+
+    QObject::connect(
+        levelView,
+        &LevelView::sendActivatedObject,
+        actorEditor,
+        &ActorEditor::receiveActivatedObject);
 
     auto mainLayout = new QVBoxLayout;
 

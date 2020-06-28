@@ -11,7 +11,7 @@ namespace editor
 namespace property::type
 {
 
-enum PropertyType
+enum class PropertyType
 {
     /*INT,
     DOUBLE,*/
@@ -68,7 +68,7 @@ public:
     }
 };
 
-std::shared_ptr<Property> CreatePropertyFromJson(const QJsonObject& object);
+std::shared_ptr<Property> createPropertyFromJson(const QJsonObject& object);
 
 class BooleanProperty : public Property
 {
@@ -105,11 +105,14 @@ private:
     Range<double> m_range;
     double m_value;
 
+public:
     double value();
     void setValue(const double& value)
     {
         m_value = value;
     }
+
+    Range<double> range(){return m_range;}
 
 public:
     void serialize() override

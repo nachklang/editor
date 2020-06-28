@@ -39,8 +39,8 @@ public:
         auto scene = new QGraphicsScene;
 
         auto createSize = []() {
-            return QSize{actor::BORDER * level::FIELD_COLUMNS + 100,
-                         actor::BORDER * level::FIELD_ROWS + 100};
+            return QSize{actor::BORDER * level::FIELD_COLUMNS + 50,
+                         actor::BORDER * level::FIELD_ROWS + 50};
         };
 
         auto viewSize = createSize();
@@ -80,6 +80,7 @@ public:
                     new Actor(i, j, QRectF{a, b, c, d}, activatedTracker, scene),
                     i,
                     j);
+                auto ActorCell =
                 qDebug() << "i: " << i << "J: " << j;
 
                 a += 30;
@@ -100,6 +101,11 @@ public:
 
         setLayout(layout);
     }
+
+signals:
+    void sendActivatedObject(
+        bool hasActivatedIndex, const std::optional<Object>& object);
+
 public slots:
     void onActorActivated(Rected* index)
     {
@@ -109,7 +115,6 @@ public slots:
         }
         else
         {
-
             if (m_activatedActor[0] != index)
             {
                 m_activatedActor[0]->toggleActivated();
@@ -121,6 +126,14 @@ public slots:
                 m_activatedActor.push_back(index);
             }
         }
+
+        auto MOCKED = Object{"TypeWithOneProperty", "MOCKED_ICON_NAME"};
+        auto hasActivatedObject = m_activatedActor.size();
+        emit sendActivatedObject(
+            hasActivatedObject,
+            hasActivatedObject ?
+                std::optional<Object>(MOCKED) :
+                std::nullopt);
     }
 
 private:

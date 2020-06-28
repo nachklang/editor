@@ -5,10 +5,6 @@
 #include <QPen>
 
 #include <QGraphicsRectItem>
-#include <QSvgRenderer>
-
-
-#include <QGraphicsSvgItem>
 
 #include "ActivityTracker.h"
 
@@ -43,45 +39,34 @@ public:
         static auto blackPen = QPen(QColor("Black"));
         setPen(m_isActive ? pen : blackPen);
 
-        if (m_isActive)
-        {
-            m_textItem = new QGraphicsTextItem("A");
-            m_textItem->document()->setDocumentMargin(4);
-            m_textItem->setDefaultTextColor(QColor("Red"));
-            m_textItem->setPlainText(QObject::tr("A"));
-            qDebug() << "Rect i" << m_rect.x() << "Rect j: " << m_rect.y();
-            m_textItem->setX(boundingRect().center().x() - 150);
-            m_textItem->setY(boundingRect().center().y() - 150);
-            m_scene->addItem(m_textItem);
+//        if (m_isActive)
+//        {
+//            m_textItem = new QGraphicsTextItem;
+//            //m_textItem->document()->setDocumentMargin(4);
+//            m_textItem->setDefaultTextColor(QColor("Red"));
+//            m_textItem->setPlainText(QObject::tr("K"));
+//            qDebug() << "Rect i" << m_rect.x() << "Rect j: " << m_rect.y();
+//            m_scene->addItem(m_textItem);
 
-            QGraphicsSvgItem *item = new QGraphicsSvgItem("./images/icon.svg");
+//            auto filename = QString("./images/icon.svg");
+//            QImage image(filename);
+//            image = image.scaled({30,30});
 
-            QSvgRenderer *renderer = new QSvgRenderer(QStringLiteral("./images/icon.svg"));
+//            m_pixmap = m_scene->addPixmap( QPixmap::fromImage(image));
+//            qDebug() << "Pos is: " << pos();
+//            m_pixmap->setPos(m_coords.center().x() - 15, m_coords.center().y() - 15);
 
-            auto filename = QString("./images/icon.svg");
-            QImage image(filename);
-            image = image.scaled({30,30});
+//            m_textItem->setPos(m_coords.center().x() - 15, m_coords.center().y() - 15);
 
-            m_pixmap = m_scene->addPixmap( QPixmap::fromImage(image));
-            qDebug() << "Pos is: " << pos();
-            m_pixmap->setPos(m_coords.center().x() - 15, m_coords.center().y() - 15);
+//            // EMIT OBJECT;
 
-
-
-            item->setSharedRenderer(renderer);
-            item->setElementId(QStringLiteral("example"));
-            m_textItem->setPos(boundingRect().center());
-            m_scene->addItem(item);
-
-        }
-        else
-        {
-            m_scene->removeItem( m_textItem);
-            m_scene->removeItem(m_pixmap);
-        }
+//        }
+//        else
+//        {
+//            m_scene->removeItem(m_textItem);
+//            m_scene->removeItem(m_pixmap);
+//        }
     }
-signals:
-    void activated(Rected* index);
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *)
@@ -100,7 +85,34 @@ private:
     std::shared_ptr<ActivityTracker> m_tracker;
     QGraphicsTextItem* m_textItem;
     QGraphicsScene* m_scene;
-    QGraphicsSvgItem* m_icon;
     QGraphicsPixmapItem * m_pixmap;
     QRectF m_coords;
 };
+
+class ActorCell2:  public QObject, public QGraphicsRectItem
+{
+    Q_OBJECT
+protected:
+    void mousePressEvent(QGraphicsSceneMouseEvent *)
+    {
+       toggleActivated();
+
+       emit cellActivated();
+    }
+
+    void toggleActivated()
+    {
+        m_isActive ? m_isActive = false : m_isActive = true;
+        static auto pen = QPen(Qt::green, 5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+        static auto blackPen = QPen(QColor("Black"));
+        setPen(m_isActive ? pen : blackPen);
+    }
+
+signals:
+    void cellActivated();
+private:
+    bool m_isActive;
+    std::shared_ptr<ActivityTracker> m_tracker;
+};
+
+using ActorCell = Rected;
