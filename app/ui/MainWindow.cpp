@@ -1,6 +1,8 @@
 #include "MainWindow.h"
 
+#include "ActorDisplayController.h"
 #include "ActorEditor.h"
+
 #include "LevelView.h"
 #include "editor/ConfigReader.h"
 #include "editor/Property.h"
@@ -8,6 +10,7 @@
 #include <QApplication>
 #include <QMenu>
 #include <QAction>
+#include <QGraphicsScene>
 #include <QIcon>
 #include <QMenuBar>
 #include <QToolBar>
@@ -21,26 +24,24 @@ namespace {
 
 QWidget* CreateMainWindget()
 {
-    auto levelViewLayout = new QHBoxLayout;
-
-    auto levelView = new LevelView;
-
-    // READ MOCKS
-    //auto actorEditor = new ActorEditor(std::optional<Objects>{});
     auto reader = ConfigReader{};
     qDebug() << "App path : " << qApp->applicationDirPath();
-    auto object = reader.createJsonObjectFromFile("test_objects.json");
+    auto object = reader.createJsonObjectFromFile("objects/objects.json");
     auto types = reader.readObjectsFromJson(object);
-    auto actorEditor = new ActorEditor(types);
 
-    constexpr auto TEST_FILE_NAME = "readProperty.json";
+    auto scene = std::make_shared<QGraphicsScene>();
 
-    auto object2 = reader.createJsonObjectFromFile(TEST_FILE_NAME);
+    auto displayController = std::make_shared<ActorDisplayController>(scene);
+    auto actorEditor = new ActorEditor(types, displayController);
 
-    auto properties = reader.readTypeProperties(object2);
 
-    Q_UNUSED(properties)
-    // END MOCKING
+    auto levelViewLayout = new QHBoxLayout;
+
+
+    auto tracker =
+        std::shared_ptr<ActivityTracker>(new ActivityTracker);
+
+    auto levelView = new LevelView(tracker, scene);
 
 
     levelViewLayout->addWidget(levelView);
@@ -49,10 +50,10 @@ QWidget* CreateMainWindget()
     levelViewLayout->addWidget(actorEditor);
 
     QObject::connect(
-        levelView,
-        &LevelView::sendActivatedObject,
+        tracker.get(),
+        &ActivityTracker::activated,
         actorEditor,
-        &ActorEditor::receiveActivatedObject);
+        &ActorEditor::receiveActiveActor);
 
     auto mainLayout = new QVBoxLayout;
 
@@ -86,14 +87,6 @@ MainWindow::MainWindow()
     QAction *openAct = new QAction(openIcon, tr("&Open..."), this);
     openAct->setShortcuts(QKeySequence::Open);
     openAct->setStatusTip(tr("Open an existing file"));
-//    connect(openAct, &QAction::triggered, this, &MainWindow::open);
-
-//        const QIcon exitIcon = QIcon::fromTheme("application-exit", QIcon(":/images/exit.png"));
-//        QAction *openAct = new QAction(openIcon, tr("&Exit..."), this);
-//        openAct->setShortcuts(QKeySequence::Open);
-//        openAct->setStatusTip(tr("Exit from application"));
-//        connect(openAct, &QAction::triggered, this, &MainWindow::close);
-
 
     fileMenu->addAction(openAct);
     fileToolBar->addAction(openAct);
@@ -105,7 +98,7 @@ MainWindow::MainWindow()
     setCentralWidget(mainWidget);
 
     setMinimumHeight(480);
-    setMinimumWidth(640);
+    setMinimumWidth(800);
 }
 
 }

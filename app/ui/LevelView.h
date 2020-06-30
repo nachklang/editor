@@ -2,6 +2,8 @@
 
 #include "Actor.h"
 
+#include "ActorDisplayController.h"
+
 #include <QDebug>
 #include <QGraphicsProxyWidget>
 #include <QGraphicsWidget>
@@ -25,18 +27,25 @@
 namespace editor
 {
 
+namespace
+{
+
+}
+
 class LevelView : public QWidget
 {
     Q_OBJECT
 public:
-    LevelView()
+    LevelView(
+        const std::shared_ptr<ActivityTracker>& tracker,
+        const std::shared_ptr<QGraphicsScene>& scene) :
+      m_tracker(tracker), m_scene(scene)
     {
         auto layout = new QVBoxLayout;
         auto label = new QLabel("LEVEL VIEW WIDGET");
         layout->addWidget(label);
 
         auto view = new QGraphicsView;
-        auto scene = new QGraphicsScene;
 
         auto createSize = []() {
             return QSize{actor::BORDER * level::FIELD_COLUMNS + 50,
@@ -58,10 +67,8 @@ public:
         mini->paint(new QPainter, new QStyleOptionGraphicsItem);
         grid->addItem(mini, 0, 1);
 
-        auto activatedTracker =
-            std::shared_ptr<ActivityTracker>(new ActivityTracker);
         QObject::connect(
-            activatedTracker.get(),
+            tracker.get(),
             &ActivityTracker::activated,
             this,
             &LevelView::onActorActivated);
@@ -76,11 +83,25 @@ public:
                 static auto c = 30.0;
                 static auto d = 30.0;
 
-                grid->addItem(
-                    new Actor(i, j, QRectF{a, b, c, d}, activatedTracker, scene),
-                    i,
-                    j);
-                auto ActorCell =
+                static auto ptr_map = std::
+                    map<std::shared_ptr<ActorProxy>, std::shared_ptr<Actor>>{};
+
+                auto icon = std::make_shared<QGraphicsPixmapItem>();
+                auto alias = std::make_shared<QGraphicsTextItem>();
+
+                auto actor = std::make_shared<Actor>(
+                    Position{i, j},
+                    QRectF{a, b, c, d},
+                    std::optional<Object>{std::nullopt},
+                    icon,
+                    alias,
+                    tracker);
+
+                auto actorProxy = std::make_shared<ActorProxy>(actor);
+                ptr_map[actorProxy] = actor;
+
+                grid->addItem(actorProxy.get(), i, j);
+
                 qDebug() << "i: " << i << "J: " << j;
 
                 a += 30;
@@ -89,55 +110,33 @@ public:
             b += 30;
         }
 
-        scene->setSceneRect(0, 0, 14 * 30, 14 * 30);
+        qDebug() << grid->itemAt(10);
+
+        m_scene->setSceneRect(0, 0, 14 * 30, 14 * 30);
 
         auto mainWindget = new QGraphicsWidget;
         mainWindget->setLayout(grid);
 
-        scene->addItem(mainWindget);
+        m_scene->addItem(mainWindget);
 
-        view->setScene(scene);
+        view->setScene(m_scene.get());
         layout->addWidget(view);
 
         setLayout(layout);
     }
 
 signals:
-    void sendActivatedObject(
-        bool hasActivatedIndex, const std::optional<Object>& object);
+    void sendActiveActor(
+        bool hasActivatedIndex, const std::shared_ptr<Actor>& actor);
 
 public slots:
-    void onActorActivated(Rected* index)
-    {
-        if (m_activatedActor.empty())
-        {
-            m_activatedActor.push_back(index);
-        }
-        else
-        {
-            if (m_activatedActor[0] != index)
-            {
-                m_activatedActor[0]->toggleActivated();
-            }
-            m_activatedActor.pop_back();
-
-            if (m_activatedActor[0] != index)
-            {
-                m_activatedActor.push_back(index);
-            }
-        }
-
-        auto MOCKED = Object{"TypeWithOneProperty", "MOCKED_ICON_NAME"};
-        auto hasActivatedObject = m_activatedActor.size();
-        emit sendActivatedObject(
-            hasActivatedObject,
-            hasActivatedObject ?
-                std::optional<Object>(MOCKED) :
-                std::nullopt);
-    }
+    void onActorActivated(const std::shared_ptr<Actor>& index);
 
 private:
-    std::vector<Rected*> m_activatedActor;
+    std::vector<std::shared_ptr<Actor>> m_activatedActor;
+    std::shared_ptr<ActivityTracker> m_tracker;
+    std::shared_ptr<QGraphicsScene> m_scene;
+    std::shared_ptr<ActorDisplayController> m_displayController;
 };
 
 } // namespace editor

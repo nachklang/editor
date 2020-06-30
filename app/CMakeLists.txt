@@ -1,17 +1,12 @@
 project(editor)
 
-file(GLOB_RECURSE PROJECT_SOURCES "*.h" "*.cpp" "*.qrc")
+file(GLOB_RECURSE PROJECT_SOURCES "*.h" "*.cpp")
 
-add_executable(${PROJECT_NAME} ${PROJECT_SOURCES} resources.qrc)
-
-set(CMAKE_AUTORCC ON)
+add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
 
 find_package(Qt5Widgets)
-find_package(Qt5Svg)
+
 target_link_libraries(${PROJECT_NAME} editor_core Qt5::Widgets)
 
-#add_custom_target(copy-files ALL
-#    COMMAND ${CMAKE_COMMAND} -E copy_directory
-#    ${CMAKE_BINARY_DIR}/app/images/
-#    ${CMAKE_BINARY_DIR}/app/images/
-#    )
+file(COPY objects DESTINATION ${CMAKE_BINARY_DIR}/app/)
+file(COPY levels DESTINATION ${CMAKE_BINARY_DIR}/app/)

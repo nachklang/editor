@@ -82,7 +82,10 @@ private:
     bool m_value;
 
 public:
-    bool value();
+    bool value()
+    {
+        return m_value;
+    }
     void setValue(const bool& value)
     {
         m_value = value;

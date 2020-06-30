@@ -1,10 +1,13 @@
 #pragma once
 
+#include "Actor.h"
+#include "ActorDisplayController.h"
+
 #include "editor/ConfigReader.h"
 #include "editor/Property.h"
 
-#include <QDebug>
 #include <QComboBox>
+#include <QDebug>
 #include <QDoubleSpinBox>
 #include <QGridLayout>
 #include <QLabel>
@@ -22,46 +25,13 @@ class ActorTypeWidget : public QWidget
 {
     Q_OBJECT
 public:
-    ActorTypeWidget(const std::optional<Objects>& objects) : m_objects(objects)
-    {
-        auto layout = new QHBoxLayout(this);
-        layout->addWidget(new QLabel("Actor type: "));
+    ActorTypeWidget(const std::optional<Objects>& objects);
 
-        m_comboBox = new QComboBox;
-        layout->addWidget(m_comboBox);
+    bool hasValidType();
 
-        m_comboBox->addItem("");
-        if (objects)
-        {
-            for (const auto& object: objects.value())
-            {
-                m_comboBox->addItem(object.name());
-            }
-        }
+    QString currentText();
 
-        auto slot = [=](const QString& objectName) {
-            auto predicate = [&objectName](const auto& element) {
-                return objectName == element.name();
-            };
-
-            auto find = std::find_if(
-                objects.value().begin(), objects.value().end(), predicate);
-
-            emit typeChanged(
-                find != objects.value().end() ? std::optional<Object>{*find} :
-                                                std::nullopt);
-        };
-
-        QObject::connect(m_comboBox, &QComboBox::currentTextChanged, slot);
-    }
-
-    void setCurrentIndex(const std::optional<Object>& object)
-    {
-       m_comboBox->setCurrentIndex(object ? m_comboBox->findText(object.value().name()) : 0);
-       qDebug() << "Object name is " << object.value().name();
-       qDebug() << "Finded index is: " << m_comboBox->findText(object.value().name());
-       qDebug() << "Current index is: " << m_comboBox->currentIndex();
-    }
+    void setCurrentIndex(const std::optional<Object>& object);
 signals:
     void typeChanged(const std::optional<Object>& object);
 
@@ -75,28 +45,9 @@ class RangedDoubleWidget : public QWidget
     Q_OBJECT
 public:
     RangedDoubleWidget(
-        const std::shared_ptr<editor::RangedDoubleProperty>& property) :
-      m_property(property)
-    {
-    }
+        const std::shared_ptr<editor::RangedDoubleProperty>& property);
 
-    void init()
-    {
-        auto layout = new QHBoxLayout;
-        setLayout(layout);
-        if (m_property)
-        {
-            auto label = new QLabel(m_property->name());
-            layout->addWidget(label);
-
-            m_spinBox = new QDoubleSpinBox;
-            auto min = m_property->range().m_min;
-            auto max = m_property->range().m_max;
-            m_spinBox->setRange(min, max);
-            m_spinBox->setToolTip(QString{"From %1 to %2"}.arg(min, max));
-            layout->addWidget(m_spinBox);
-        }
-    }
+    void init();
 public slots:
     void onChangedComplete()
     {
@@ -112,22 +63,9 @@ class BooleanWidget : public QWidget
 {
     Q_OBJECT
 public:
-    BooleanWidget(const std::shared_ptr<editor::BooleanProperty>& property) :
-      m_property(property)
-    {
-    }
+    BooleanWidget(const std::shared_ptr<editor::BooleanProperty>& property);
 
-    void init()
-    {
-        m_comboBox = new QComboBox;
-        m_comboBox->addItem(tr("true"), QVariant{true});
-        m_comboBox->addItem(tr("false"), QVariant{false});
-
-        if (m_property->value())
-        {
-            m_comboBox->setCurrentIndex(m_property.get() ? 0 : 1);
-        }
-    }
+    void init();
 public slots:
     void onChangedComplete()
     {
@@ -148,6 +86,7 @@ void createPropertyWidget(
 {
     auto propertyWidget =
         new PropertyWidget(std::static_pointer_cast<PropertyType>(property));
+    propertyWidget->init();
 
     QObject::connect(
         saveButton,
@@ -165,95 +104,26 @@ class ActorEditor : public QWidget
     void createPropertiesWidgets(
         const std::optional<Properties>& properties,
         QVBoxLayout* sublayout,
-        QPushButton* saveButton)
-    {
-        if (properties)
-        {
-            for (const auto& property: properties.value())
-            {
-                if (property->type() == property::type::BOOLEAN_TYPE)
-                {
-                    createPropertyWidget<BooleanWidget, BooleanProperty>(
-                        sublayout, saveButton, property);
-                }
-                else if (property->type() == property::type::RANGED_DOUBLE_TYPE)
-                {
-                    createPropertyWidget<
-                        RangedDoubleWidget,
-                        RangedDoubleProperty>(sublayout, saveButton, property);
-                }
-            }
-        }
-    }
+        QPushButton* saveButton);
 
 public:
-    ActorEditor(const std::optional<Objects>& objects) : m_objects(objects)
-    {
-        auto label = new QLabel("ACTOR EDITOR WIDGET");
-
-        // createPropertiesWidgets(m_objects->value()m_properties,
-        // m_saveButton);
-        m_mainLayout = new QVBoxLayout;
-        m_mainLayout->addWidget(label);
-        setLayout(m_mainLayout);
-    }
+    ActorEditor(const std::optional<Objects>& objects, std::shared_ptr<ActorDisplayController> displayController);
 
 public slots:
-    void receiveActivatedObject(
-        bool hasActivatedObject, const std::optional<Object>& object)
-    {
-        qDebug() <<  "Receiving object!";
+    void receiveActiveActor(const std::shared_ptr<Actor>& actor);
 
-        if (hasActivatedObject)
-        {
-            if (m_actorTypeWidget)
-            {
-                delete m_actorTypeWidget;
-            }
-
-            // add actor activity widget
-            m_actorTypeWidget = new ActorTypeWidget(m_objects);
-            m_actorTypeWidget->setCurrentIndex(object);
+    void onActorTypeChanged(const std::optional<Object>& object);
 
 
-            m_mainLayout->addWidget(m_actorTypeWidget);
-
-            m_saveButton = new QPushButton("Save changes", m_actorTypeWidget);
-
-            if (object && object.value().properties())
-            {
-                m_propertiesLayout = new QVBoxLayout;
-
-                createPropertiesWidgets(
-                    object.value().properties(),
-                    m_propertiesLayout,
-                    m_saveButton);
-
-                m_mainLayout->addLayout(m_propertiesLayout);
-            }
-
-            m_mainLayout->addWidget(m_saveButton);
-            // select current type in actorTypeWidget
-
-            // delete all properties widgets
-            // reinitialize widget
-        }
-        else
-        {
-            qDeleteAll(m_mainLayout->children());
-        }
-    }
-
-    void actorTypeChanged(const std::optional<Object>& /*object*/)
-    {
-    }
 
 private:
     QVBoxLayout* m_mainLayout;
     QVBoxLayout* m_propertiesLayout;
     ActorTypeWidget* m_actorTypeWidget = nullptr;
-    QPushButton* m_saveButton;
+    QPushButton* m_saveButton = nullptr;
     std::optional<Objects> m_objects;
+    std::shared_ptr<ActorDisplayController> m_displayController;
+    std::shared_ptr<Actor> m_activeActor;
 };
 
 } // namespace editor

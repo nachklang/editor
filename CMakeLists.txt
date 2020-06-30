@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.10)
 
 project(editor)
 
-include(gtest.cmake)
-
 set(CMAKE_AUTOMOC ON)
+
+include(gtest.cmake)
 
 set(CMAKE_CXX_STANDARD 17)
 set(WARNING_FLAGS "-Wall -Wextra -pedantic -Werror")

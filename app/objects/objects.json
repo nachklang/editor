@@ -1,0 +1,32 @@
+{
+   "types":[
+            {
+               "name":"Player",
+               "iconName":"images/player.svg"
+            },
+            {
+               "name":"Ladder",
+               "iconName":"images/ladder.png",
+               "properties" :
+               [
+                  {
+                     "name":"VelocitySpeed",
+                     "type": "ranged_double",
+                     "min":0.01,
+                     "max": 1.0
+                  }
+               ]
+            },
+            {
+               "name":"Wall",
+               "iconName":"images/wall.png",
+               "properties":
+               [
+                  {
+                     "name" : "Destructable",
+                     "type" : "boolean"
+                  }
+               ]
+            }
+         ]
+}
