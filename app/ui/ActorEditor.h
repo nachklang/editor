@@ -40,16 +40,29 @@ private:
     std::optional<Objects> m_objects;
 };
 
-class RangedDoubleWidget : public QWidget
+class PropertyBaseWidget: public QWidget
+{
+    Q_OBJECT
+public:
+    virtual ~PropertyBaseWidget(){}
+
+    virtual void init() = 0;
+
+public slots:
+    virtual void onChangedComplete() = 0;
+
+};
+
+class RangedDoubleWidget : public PropertyBaseWidget
 {
     Q_OBJECT
 public:
     RangedDoubleWidget(
         const std::shared_ptr<editor::RangedDoubleProperty>& property);
 
-    void init();
+    void init() override;
 public slots:
-    void onChangedComplete()
+    void onChangedComplete() override
     {
         m_property->setValue(m_spinBox->value());
     }
@@ -59,15 +72,16 @@ private:
     QDoubleSpinBox* m_spinBox;
 };
 
-class BooleanWidget : public QWidget
+class BooleanWidget : public PropertyBaseWidget
 {
     Q_OBJECT
 public:
+
     BooleanWidget(const std::shared_ptr<editor::BooleanProperty>& property);
 
-    void init();
+    void init() override;
 public slots:
-    void onChangedComplete()
+    void onChangedComplete() override
     {
         m_property->setValue(
             m_comboBox->itemData(m_comboBox->currentIndex()).toBool());
@@ -82,19 +96,22 @@ template <typename PropertyWidget, typename PropertyType>
 void createPropertyWidget(
     QVBoxLayout* layout,
     QPushButton* saveButton,
-    const std::shared_ptr<editor::Property>& property)
+    const std::shared_ptr<editor::Property>& property, std::vector<std::shared_ptr<PropertyBaseWidget>>& propertiesWidgets)
 {
-    auto propertyWidget =
-        new PropertyWidget(std::static_pointer_cast<PropertyType>(property));
+    auto propertyWidget = std::shared_ptr<PropertyBaseWidget>();
+    propertyWidget.reset(
+        new PropertyWidget(std::static_pointer_cast<PropertyType>(property)));
     propertyWidget->init();
 
     QObject::connect(
         saveButton,
         &QPushButton::clicked,
-        propertyWidget,
-        &PropertyWidget::onChangedComplete);
+        propertyWidget.get(),
+        &PropertyBaseWidget::onChangedComplete);
 
-    layout->addWidget(propertyWidget);
+    propertiesWidgets.emplace_back(propertyWidget);
+
+    layout->addWidget(propertyWidget.get());
 }
 
 class ActorEditor : public QWidget
@@ -104,7 +121,8 @@ class ActorEditor : public QWidget
     void createPropertiesWidgets(
         const std::optional<Properties>& properties,
         QVBoxLayout* sublayout,
-        QPushButton* saveButton);
+        QPushButton* saveButton,std::vector<std::shared_ptr<PropertyBaseWidget>>& propertiesWidgets
+            );
 
 public:
     ActorEditor(const std::optional<Objects>& objects, std::shared_ptr<ActorDisplayController> displayController);
@@ -124,6 +142,7 @@ private:
     std::optional<Objects> m_objects;
     std::shared_ptr<ActorDisplayController> m_displayController;
     std::shared_ptr<Actor> m_activeActor;
+    std::vector<std::shared_ptr<PropertyBaseWidget>> m_propertiesWidgets;
 };
 
 } // namespace editor

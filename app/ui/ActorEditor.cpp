@@ -111,7 +111,7 @@ void BooleanWidget::init()
 void ActorEditor::createPropertiesWidgets(
     const std::optional<Properties> &properties,
     QVBoxLayout *sublayout,
-    QPushButton *saveButton)
+    QPushButton *saveButton, std::vector<std::shared_ptr<PropertyBaseWidget>>& propertiesWidgets)
 {
     if (properties)
     {
@@ -120,12 +120,12 @@ void ActorEditor::createPropertiesWidgets(
             if (property->type() == property::type::BOOLEAN_TYPE)
             {
                 createPropertyWidget<BooleanWidget, BooleanProperty>(
-                    sublayout, saveButton, property);
+                    sublayout, saveButton, property, propertiesWidgets);
             }
             else if (property->type() == property::type::RANGED_DOUBLE_TYPE)
             {
                 createPropertyWidget<RangedDoubleWidget, RangedDoubleProperty>(
-                    sublayout, saveButton, property);
+                    sublayout, saveButton, property, propertiesWidgets);
             }
         }
     }
@@ -144,13 +144,19 @@ ActorEditor::ActorEditor(
     m_actorTypeWidget = new ActorTypeWidget(objects);
     m_actorTypeWidget->hide();
 
+    m_propertiesLayout = new QVBoxLayout;
+
     QObject::connect(
         m_actorTypeWidget,
         &ActorTypeWidget::typeChanged,
         this,
         &ActorEditor::onActorTypeChanged);
 
+
+
+
     m_mainLayout = new QVBoxLayout;
+    m_mainLayout->addLayout(m_propertiesLayout);
     m_mainLayout->addWidget(label);
     m_mainLayout->addWidget(m_actorTypeWidget);
     setLayout(m_mainLayout);
@@ -212,18 +218,34 @@ void ActorEditor::receiveActiveActor(const std::shared_ptr<Actor> &actor)
 
         if (object && object.value().properties())
         {
-            m_propertiesLayout = new QVBoxLayout;
+
+            if(m_propertiesLayout->count())
+            {
+                for(const auto& propertyWidget : m_propertiesWidgets)
+                {
+                    QObject::disconnect(
+                        m_saveButton,
+                        &QPushButton::clicked,
+                        propertyWidget.get(),
+                        &PropertyBaseWidget::onChangedComplete);
+                }
+
+                for(auto counter = 0; counter < m_propertiesLayout->count(); ++counter)
+                {
+                    m_propertiesLayout->removeItem(m_propertiesLayout->itemAt(counter));
+                }
+                m_propertiesWidgets.clear();
+            }
 
             createPropertiesWidgets(
-                object.value().properties(), m_propertiesLayout, m_saveButton);
+                object.value().properties(), m_propertiesLayout, m_saveButton, m_propertiesWidgets);
 
-            m_mainLayout->addLayout(m_propertiesLayout);
         }
     }
     else
     {
-        delete m_saveButton;
-        qDeleteAll(m_mainLayout->children());
+//        delete m_saveButton;
+//        qDeleteAll(m_mainLayout->children());
     }
 }
 
@@ -235,25 +257,35 @@ void ActorEditor::onActorTypeChanged(const std::optional<Object> &object)
                  << "name: " << object.value().name();
     }
 
+    if(m_propertiesLayout->count())
+    {
+        for(const auto& propertyWidget : m_propertiesWidgets)
+        {
+            QObject::disconnect(
+                m_saveButton,
+                &QPushButton::clicked,
+                propertyWidget.get(),
+                &PropertyBaseWidget::onChangedComplete);
+        }
+
+        for(auto counter = 0; counter < m_propertiesLayout->count(); ++counter)
+        {
+            m_propertiesLayout->removeItem(m_propertiesLayout->itemAt(counter));
+        }
+        m_propertiesWidgets.clear();
+    }
+
+
     if (object && object.value().properties())
     {
-                    if(m_propertiesLayout)
-                    {
-                        qDeleteAll(m_propertiesLayout->children());
-                        delete m_propertiesLayout;
-                        m_propertiesLayout = new QVBoxLayout;
-                        m_mainLayout->addLayout(m_propertiesLayout);
-                    }
-                    else
-                    {
-        m_propertiesLayout = new QVBoxLayout;
 
-                    }
 
         createPropertiesWidgets(
-            object.value().properties(), m_propertiesLayout, m_saveButton);
+            object.value().properties(), m_propertiesLayout, m_saveButton, m_propertiesWidgets);
 
-        m_mainLayout->addLayout(m_propertiesLayout);
+        qDebug() << "PropertiesWidgets size: " << m_propertiesWidgets.size();
+
+        //m_mainLayout->addLayout(m_propertiesLayout);
     }
 }
 
