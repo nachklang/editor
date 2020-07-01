@@ -12,6 +12,11 @@ ActorTypeWidget::ActorTypeWidget(const std::optional<Objects> &objects) :
     m_comboBox = new QComboBox;
     layout->addWidget(m_comboBox);
 
+    auto mainLayout = new QVBoxLayout;
+    mainLayout->addLayout(layout);
+
+    setLayout(mainLayout);
+
     m_comboBox->addItem("");
     if (objects)
     {
@@ -53,10 +58,6 @@ void ActorTypeWidget::setCurrentIndex(const std::optional<Object> &object)
 {
     m_comboBox->setCurrentIndex(
         object ? m_comboBox->findText(object.value().name()) : 0);
-    //       qDebug() << "Object name is " << object.value().name();
-    //       qDebug() << "Finded index is: " <<
-    //       m_comboBox->findText(object.value().name()); qDebug() << "Current
-    //       index is: " << m_comboBox->currentIndex();
 }
 
 RangedDoubleWidget::RangedDoubleWidget(
@@ -79,6 +80,7 @@ void RangedDoubleWidget::init()
         auto max = m_property->range().m_max;
         m_spinBox->setRange(min, max);
         m_spinBox->setToolTip(QString{"From %1 to %2"}.arg(min, max));
+        m_spinBox->setValue(m_property->value());
         layout->addWidget(m_spinBox);
     }
     setLayout(layout);
@@ -97,21 +99,20 @@ void BooleanWidget::init()
     layout->addWidget(label);
 
     m_comboBox = new QComboBox;
-    m_comboBox->addItem(tr("true"), QVariant{true});
-    m_comboBox->addItem(tr("false"), QVariant{false});
+    m_comboBox->addItem("true", QVariant{true});
+    m_comboBox->addItem("false", QVariant{false});
+    m_comboBox->setCurrentIndex(m_property->value() ? 0 : 1);
 
-    if (m_property->value())
-    {
-        m_comboBox->setCurrentIndex(m_property.get() ? 0 : 1);
-    }
     layout->addWidget(m_comboBox);
+
     setLayout(layout);
 }
 
 void ActorEditor::createPropertiesWidgets(
     const std::optional<Properties> &properties,
     QVBoxLayout *sublayout,
-    QPushButton *saveButton, std::vector<std::shared_ptr<PropertyBaseWidget>>& propertiesWidgets)
+    QPushButton *saveButton,
+    std::vector<std::shared_ptr<PropertyBaseWidget>> &propertiesWidgets)
 {
     if (properties)
     {
@@ -136,11 +137,6 @@ ActorEditor::ActorEditor(
     const std::shared_ptr<ActorDisplayController> displayController) :
   m_objects(objects), m_displayController(displayController)
 {
-    if (objects)
-    {
-        qDebug() << "OBJECTS SIZE IN ACTOR_EDITOR" << objects.value().size();
-    }
-    auto label = new QLabel("ACTOR EDITOR WIDGET");
     m_actorTypeWidget = new ActorTypeWidget(objects);
     m_actorTypeWidget->hide();
 
@@ -152,13 +148,10 @@ ActorEditor::ActorEditor(
         this,
         &ActorEditor::onActorTypeChanged);
 
-
-
-
     m_mainLayout = new QVBoxLayout;
-    m_mainLayout->addLayout(m_propertiesLayout);
-    m_mainLayout->addWidget(label);
     m_mainLayout->addWidget(m_actorTypeWidget);
+    m_mainLayout->addLayout(m_propertiesLayout);
+
     setLayout(m_mainLayout);
 }
 
@@ -187,6 +180,7 @@ void ActorEditor::receiveActiveActor(const std::shared_ptr<Actor> &actor)
         {
             m_saveButton = new QPushButton("Save changes", m_actorTypeWidget);
             m_mainLayout->addWidget(m_saveButton);
+
             QObject::connect(
                 m_saveButton, &QPushButton::clicked, this, [this]() {
                     if (m_actorTypeWidget->hasValidType())
@@ -203,8 +197,7 @@ void ActorEditor::receiveActiveActor(const std::shared_ptr<Actor> &actor)
                         {
                             m_displayController->showRepresentation(
                                 m_activeActor->coords(),
-                                it->iconName()
-                                        ,
+                                it->iconName(),
                                 it->name());
                         }
                     }
@@ -214,38 +207,91 @@ void ActorEditor::receiveActiveActor(const std::shared_ptr<Actor> &actor)
                             m_activeActor->coords());
                     }
                 });
+
+            QObject::connect(
+                m_saveButton,
+                &QPushButton::clicked,
+                this,
+                &ActorEditor::saveObjectToActor);
         }
 
         if (object && object.value().properties())
         {
 
-            if(m_propertiesLayout->count())
+            if (m_propertiesLayout->count())
             {
-                for(const auto& propertyWidget : m_propertiesWidgets)
+                for (auto counter = 0; counter < m_propertiesLayout->count();
+                     ++counter)
                 {
-                    QObject::disconnect(
-                        m_saveButton,
-                        &QPushButton::clicked,
-                        propertyWidget.get(),
-                        &PropertyBaseWidget::onChangedComplete);
-                }
-
-                for(auto counter = 0; counter < m_propertiesLayout->count(); ++counter)
-                {
-                    m_propertiesLayout->removeItem(m_propertiesLayout->itemAt(counter));
+                    m_propertiesLayout->removeItem(
+                        m_propertiesLayout->itemAt(counter));
                 }
                 m_propertiesWidgets.clear();
             }
 
             createPropertiesWidgets(
-                object.value().properties(), m_propertiesLayout, m_saveButton, m_propertiesWidgets);
-
+                object.value().properties(),
+                m_propertiesLayout,
+                m_saveButton,
+                m_propertiesWidgets);
         }
     }
-    else
+}
+
+void ActorEditor::saveObjectToActor()
+{
+    if (m_objects)
     {
-//        delete m_saveButton;
-//        qDeleteAll(m_mainLayout->children());
+        auto it = std::find_if(
+            m_objects.value().begin(),
+            m_objects.value().end(),
+            [this](const auto &element) {
+                return m_actorTypeWidget->currentText() == element.name();
+            });
+
+        if (it != m_objects.value().end())
+        {
+            qDebug() << it->name();
+
+            auto object = *it;
+            auto properties = Properties{};
+
+            for (const auto &propertyWidget: m_propertiesWidgets)
+            {
+                auto property = propertyWidget->property();
+                propertyWidget->onChangedComplete();
+                properties.push_back(property->clone());
+                property->resetValue();
+            }
+            object.setProperties(
+                properties.size() ? std::make_optional(properties) :
+                                    std::nullopt);
+
+            if (object.singlePlaceable())
+            {
+                auto actorsOnScene = m_displayController->actorsOnScene();
+                auto find = std::find_if(
+                    actorsOnScene.begin(),
+                    actorsOnScene.end(),
+                    [](const auto &element) {
+                        auto object = element.second->object();
+                        if (object)
+                        {
+                            return object.value().singlePlaceable();
+                        }
+                        return false;
+                    });
+
+                if (find != actorsOnScene.end())
+                {
+                    find->second->setObject(std::nullopt);
+                    m_displayController->hideRepresentation(
+                        find->second->coords());
+                }
+            }
+
+            m_activeActor->setObject(object);
+        }
     }
 }
 
@@ -257,35 +303,24 @@ void ActorEditor::onActorTypeChanged(const std::optional<Object> &object)
                  << "name: " << object.value().name();
     }
 
-    if(m_propertiesLayout->count())
+    if (m_propertiesLayout->count())
     {
-        for(const auto& propertyWidget : m_propertiesWidgets)
-        {
-            QObject::disconnect(
-                m_saveButton,
-                &QPushButton::clicked,
-                propertyWidget.get(),
-                &PropertyBaseWidget::onChangedComplete);
-        }
-
-        for(auto counter = 0; counter < m_propertiesLayout->count(); ++counter)
+        for (auto counter = 0; counter < m_propertiesLayout->count(); ++counter)
         {
             m_propertiesLayout->removeItem(m_propertiesLayout->itemAt(counter));
         }
         m_propertiesWidgets.clear();
     }
 
-
     if (object && object.value().properties())
     {
-
-
         createPropertiesWidgets(
-            object.value().properties(), m_propertiesLayout, m_saveButton, m_propertiesWidgets);
+            object.value().properties(),
+            m_propertiesLayout,
+            m_saveButton,
+            m_propertiesWidgets);
 
         qDebug() << "PropertiesWidgets size: " << m_propertiesWidgets.size();
-
-        //m_mainLayout->addLayout(m_propertiesLayout);
     }
 }
 

@@ -55,14 +55,15 @@ Objects ConfigReader::readObjectsFromJson(const QJsonObject &object)
             {
                 auto typeAsObject = type.toObject();
                 if (!typeAsObject.isEmpty() && typeAsObject.contains("name")
-                    && typeAsObject.contains("iconName")
+                    && typeAsObject.contains("iconName") && typeAsObject.contains("singlePlaceable")
                     && !typeAsObject.value("name").isNull()
-                    && !typeAsObject.value("iconName").isNull())
+                    && !typeAsObject.value("iconName").isNull() && !typeAsObject.value("singlePlaceable").isNull())
                 {
                     auto name = typeAsObject.value("name").toString();
                     auto iconName = typeAsObject.value("iconName").toString();
+                    auto singlePlaceable = typeAsObject.value("singlePlaceable").toBool();
                     result.push_back(
-                        Object{name, iconName, readTypeProperties(typeAsObject)});
+                        Object{name, iconName, singlePlaceable, readTypeProperties(typeAsObject)});
                 }
             }
             return result;

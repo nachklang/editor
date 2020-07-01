@@ -41,8 +41,7 @@ QWidget* CreateMainWindget()
     auto tracker =
         std::shared_ptr<ActivityTracker>(new ActivityTracker);
 
-    auto levelView = new LevelView(tracker, scene);
-
+    auto levelView = new LevelView(tracker, scene, displayController);
 
     levelViewLayout->addWidget(levelView);
     levelViewLayout->addWidget(new QSplitter);

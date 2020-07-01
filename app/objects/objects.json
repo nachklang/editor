@@ -2,11 +2,13 @@
    "types":[
             {
                "name":"Player",
-               "iconName":"images/player.svg"
+               "iconName":"images/player.svg",
+               "singlePlaceable" : true
             },
             {
                "name":"Ladder",
                "iconName":"images/ladder.png",
+               "singlePlaceable" : false,
                "properties" :
                [
                   {
@@ -16,10 +18,12 @@
                      "max": 1.0
                   }
                ]
+               
             },
             {
                "name":"Wall",
                "iconName":"images/wall.png",
+               "singlePlaceable" : false,
                "properties":
                [
                   {

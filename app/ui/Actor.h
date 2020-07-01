@@ -35,6 +35,7 @@ public:
     QRectF coords();
 
     std::optional<Object> object();
+    void setObject(const std::optional<Object>& object);
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent*);

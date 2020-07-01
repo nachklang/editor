@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Actor.h"
+
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 #include <QGraphicsTextItem>
@@ -26,6 +28,10 @@ class ActorDisplayController
 public:
     ActorDisplayController(const std::shared_ptr<QGraphicsScene>& scene);
 
+    void setActorsScene(const std::map<std::shared_ptr<ActorProxy>, std::shared_ptr<Actor>>& actorsOnScene);
+
+    std::map<std::shared_ptr<ActorProxy>, std::shared_ptr<Actor>> actorsOnScene();
+
 public slots:
     void showRepresentation(
         const QRectF coords,
@@ -37,4 +43,5 @@ public slots:
 private:
     std::shared_ptr<QGraphicsScene> m_scene;
     ActorsDisplayStorage m_storage;
+    std::map<std::shared_ptr<ActorProxy>, std::shared_ptr<Actor>> m_actorsOnScene;
 };

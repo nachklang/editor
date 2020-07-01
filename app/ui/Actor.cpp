@@ -22,7 +22,7 @@ Actor::Actor(
 
 void Actor::toggleActivated()
 {
-    m_isActive ? m_isActive = false : m_isActive = true;
+    m_isActive = !m_isActive;
     static auto pen =
         QPen(Qt::green, 5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
     static auto blackPen = QPen(QColor("Black"));
@@ -37,6 +37,11 @@ QRectF Actor::coords()
 std::optional<Object> Actor::object()
 {
     return m_object;
+}
+
+void Actor::setObject(const std::optional<Object> &object)
+{
+    m_object = object;
 }
 
 void Actor::mousePressEvent(QGraphicsSceneMouseEvent *)

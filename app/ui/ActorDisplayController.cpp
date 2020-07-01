@@ -24,6 +24,16 @@ ActorDisplayController::ActorDisplayController(
 {
 }
 
+void ActorDisplayController::setActorsScene(const std::map<std::shared_ptr<ActorProxy>, std::shared_ptr<Actor> >& actorsOnScene)
+{
+    m_actorsOnScene = actorsOnScene;
+}
+
+std::map<std::shared_ptr<ActorProxy>, std::shared_ptr<Actor> > ActorDisplayController::actorsOnScene()
+{
+    return m_actorsOnScene;
+}
+
 void ActorDisplayController::showRepresentation(
     const QRectF coords,
     const std::optional<QString>& iconName,

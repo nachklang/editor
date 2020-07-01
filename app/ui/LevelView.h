@@ -38,8 +38,9 @@ class LevelView : public QWidget
 public:
     LevelView(
         const std::shared_ptr<ActivityTracker>& tracker,
-        const std::shared_ptr<QGraphicsScene>& scene) :
-      m_tracker(tracker), m_scene(scene)
+        const std::shared_ptr<QGraphicsScene>& scene,
+            const std::shared_ptr<ActorDisplayController>& displayController) :
+      m_tracker(tracker), m_scene(scene), m_displayController(displayController)
     {
         auto layout = new QVBoxLayout;
         auto label = new QLabel("LEVEL VIEW WIDGET");
@@ -73,6 +74,9 @@ public:
             this,
             &LevelView::onActorActivated);
 
+        static auto ptr_map = std::
+            map<std::shared_ptr<ActorProxy>, std::shared_ptr<Actor>>{};
+
         for (auto i = 0; i < 10; ++i)
         {
             static auto a = 0.0;
@@ -82,9 +86,6 @@ public:
 
                 static auto c = 30.0;
                 static auto d = 30.0;
-
-                static auto ptr_map = std::
-                    map<std::shared_ptr<ActorProxy>, std::shared_ptr<Actor>>{};
 
                 auto icon = std::make_shared<QGraphicsPixmapItem>();
                 auto alias = std::make_shared<QGraphicsTextItem>();
@@ -109,6 +110,8 @@ public:
             a = 0;
             b += 30;
         }
+
+        m_displayController->setActorsScene(ptr_map);
 
         qDebug() << grid->itemAt(10);
 

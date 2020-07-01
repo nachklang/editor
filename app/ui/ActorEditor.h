@@ -48,6 +48,8 @@ public:
 
     virtual void init() = 0;
 
+    virtual std::shared_ptr<Property> property() = 0;
+
 public slots:
     virtual void onChangedComplete() = 0;
 
@@ -61,6 +63,11 @@ public:
         const std::shared_ptr<editor::RangedDoubleProperty>& property);
 
     void init() override;
+
+    std::shared_ptr<Property> property() override
+    {
+        return std::static_pointer_cast<Property>(m_property);
+    }
 public slots:
     void onChangedComplete() override
     {
@@ -80,6 +87,11 @@ public:
     BooleanWidget(const std::shared_ptr<editor::BooleanProperty>& property);
 
     void init() override;
+
+    std::shared_ptr<Property> property() override
+    {
+        return std::static_pointer_cast<Property>(m_property);
+    }
 public slots:
     void onChangedComplete() override
     {
@@ -95,19 +107,13 @@ private:
 template <typename PropertyWidget, typename PropertyType>
 void createPropertyWidget(
     QVBoxLayout* layout,
-    QPushButton* saveButton,
+    QPushButton* ,
     const std::shared_ptr<editor::Property>& property, std::vector<std::shared_ptr<PropertyBaseWidget>>& propertiesWidgets)
 {
     auto propertyWidget = std::shared_ptr<PropertyBaseWidget>();
     propertyWidget.reset(
         new PropertyWidget(std::static_pointer_cast<PropertyType>(property)));
     propertyWidget->init();
-
-    QObject::connect(
-        saveButton,
-        &QPushButton::clicked,
-        propertyWidget.get(),
-        &PropertyBaseWidget::onChangedComplete);
 
     propertiesWidgets.emplace_back(propertyWidget);
 
@@ -132,7 +138,7 @@ public slots:
 
     void onActorTypeChanged(const std::optional<Object>& object);
 
-
+    void saveObjectToActor();
 
 private:
     QVBoxLayout* m_mainLayout;
