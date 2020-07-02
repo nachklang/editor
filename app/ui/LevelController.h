@@ -27,6 +27,7 @@ signals:
         const QRectF coords,
         const std::optional<QString>& iconName,
         const std::optional<QString>& aliasName);
+    void hideDestroyedActor(const QRectF coords);
 
 private:
     std::vector<Object> m_objects;

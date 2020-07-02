@@ -80,6 +80,20 @@ QJsonDocument saveActorsToDocument(
 
 void LevelController::createNewLevel()
 {
+    if (!std::all_of(
+            m_actorsOnScene.begin(),
+            m_actorsOnScene.end(),
+            [](const auto& element) { return !element.second->object(); }))
+    {
+        for (const auto& [proxy, actor]: m_actorsOnScene)
+        {
+            if (actor->object())
+            {
+                hideDestroyedActor(actor->coords());
+                actor->setObject(std::nullopt);
+            }
+        }
+    }
 }
 
 void LevelController::openExistedLevel()
@@ -101,110 +115,105 @@ void LevelController::openExistedLevel()
 
     auto jsonDocument = QJsonDocument{QJsonDocument::fromJson(file.readAll())};
 
-    if (!std::all_of(
+    createNewLevel();
+
+    auto jsonObject = jsonDocument.object();
+
+    auto level = jsonObject["level"].toArray();
+
+    for (const auto& objectAtLevel: level)
+    {
+        auto positionJson = objectAtLevel.toObject()["position"].toArray();
+        auto position =
+            Position{positionJson[0].toInt(), positionJson[1].toInt()};
+
+        auto actorOnLevel = std::find_if(
             m_actorsOnScene.begin(),
             m_actorsOnScene.end(),
-            [](const auto& element) { return !element.second->object(); }))
-    {
-        for (const auto& [proxy, actor]: m_actorsOnScene)
+            [&position](const auto& element) {
+                return element.second->position() == position;
+            });
+
+        auto object = std::optional<Object>{std::nullopt};
+
+        if (actorOnLevel != m_actorsOnScene.end())
         {
-            actor->setObject(std::nullopt);
-        }
+            auto name = objectAtLevel.toObject()["typename"].toString();
+            auto objectFromConfig = std::find_if(
+                m_objects.begin(),
+                m_objects.end(),
+                [name](const auto& element) { return name == element.name(); });
 
-    }
-
-        auto jsonObject = jsonDocument.object();
-
-        auto level = jsonObject["level"].toArray();
-
-        for (const auto& objectAtLevel: level)
-        {
-            auto positionJson = objectAtLevel.toObject()["position"].toArray();
-            auto position =
-                Position{positionJson[0].toInt(), positionJson[1].toInt()};
-
-            auto actorOnLevel = std::find_if(
-                m_actorsOnScene.begin(),
-                m_actorsOnScene.end(),
-                [&position](const auto& element) {
-                    return element.second->position() == position;
-                });
-
-            auto object = std::optional<Object>{std::nullopt};
-
-            if (actorOnLevel != m_actorsOnScene.end())
+            if (objectFromConfig != m_objects.end())
             {
-                auto name = objectAtLevel.toObject()["typename"].toString();
-                auto objectFromConfig = std::find_if(
-                    m_objects.begin(),
-                    m_objects.end(),
-                    [name](const auto& element) {
-                        return name == element.name();
-                    });
+                object = *objectFromConfig;
+            }
 
-                if (objectFromConfig != m_objects.end())
+            auto properties = std::optional<Properties>{std::nullopt};
+
+            if (objectAtLevel.toObject().contains("properties"))
+            {
+                auto propertiesJson =
+                    objectAtLevel.toObject()["properties"].toArray();
+                for (const auto& propertyJson: propertiesJson)
                 {
-                    object = *objectFromConfig;
-                }
+                    qDebug() << "Property json name: "
+                             << propertyJson.toObject()["name"].toString();
 
-                auto properties = std::optional<Properties>{std::nullopt};
+                    auto objectProperties = object.value().properties().value();
 
-                if (objectAtLevel.toObject().contains("properties"))
-                {
-                    auto propertiesJson = objectAtLevel.toObject()["properties"].toArray();
-                    for (const auto& propertyJson: propertiesJson)
+                    auto findedProperty = std::find_if(
+                        objectProperties.begin(),
+                        objectProperties.end(),
+                        [&propertyJson](const auto& propertyElement) {
+                            qDebug() << "Property element name"
+                                     << propertyElement->name();
+                            qDebug()
+                                << "Property json name: "
+                                << propertyJson.toObject()["name"].toString();
+                            return propertyElement->name()
+                                   == propertyJson.toObject()["name"].toString();
+                        });
+                    auto finded = *findedProperty;
+
+                    qDebug() << "Finded property exists"
+                             << static_cast<bool>(*findedProperty);
+                    if (findedProperty != objectProperties.end())
                     {
-                        qDebug() << "Property json name: " << propertyJson.toObject()["name"].toString();
+                        qDebug() << "Finded property exists"
+                                 << static_cast<bool>(*findedProperty);
 
-                        auto objectProperties = object.value().properties().value();
+                        auto tmp = (*findedProperty)->clone();
+                        (*findedProperty) = tmp;
 
-
-                        auto findedProperty = std::find_if(
-                            objectProperties.begin(),
-                            objectProperties.end(),
-                            [&propertyJson](const auto& propertyElement) {
-                            qDebug() << "Property element name" << propertyElement->name();
-                             qDebug() << "Property json name: " << propertyJson.toObject()["name"].toString();
-                                return propertyElement->name()
-                                       == propertyJson.toObject()["name"].toString();
-
-
-                            });
-                        auto finded = *findedProperty;
-
-                        qDebug() << "Finded property exists" << static_cast<bool>(*findedProperty);
-                        if (findedProperty != objectProperties.end())
+                        if ((*findedProperty)->name()
+                            == editor::property::type::BOOLEAN_TYPE)
                         {
-                            qDebug() << "Finded property exists" << static_cast<bool>(*findedProperty);
-
-                            auto tmp = (*findedProperty)->clone();
-                            (*findedProperty) = tmp;
-
-                            if ((*findedProperty)->name()
-                                == editor::property::type::BOOLEAN_TYPE)
-                            {
-                                auto casted = std::static_pointer_cast<editor::BooleanProperty>(*findedProperty);
-                                casted
-                                    ->setValue(propertyJson.toObject()["value"].toBool());
-                            }
-                            else if (
-                                (*findedProperty)->name()
-                                == editor::property::type::RANGED_DOUBLE_TYPE)
-                            {
-                                auto casted = std::static_pointer_cast<editor::RangedDoubleProperty>(*findedProperty);
-                                casted
-                                    ->setValue(
-                                        propertyJson.toObject()["value"].toDouble());
-                            }
+                            auto casted = std::static_pointer_cast<
+                                editor::BooleanProperty>(*findedProperty);
+                            casted->setValue(
+                                propertyJson.toObject()["value"].toBool());
+                        }
+                        else if (
+                            (*findedProperty)->name()
+                            == editor::property::type::RANGED_DOUBLE_TYPE)
+                        {
+                            auto casted = std::static_pointer_cast<
+                                editor::RangedDoubleProperty>(*findedProperty);
+                            casted->setValue(
+                                propertyJson.toObject()["value"].toDouble());
                         }
                     }
                 }
-                auto updatedActor = actorOnLevel->second;
-                updatedActor->setObject(object);
-                showLoadedActor(updatedActor->coords(), updatedActor->object()->iconName(), updatedActor->object()->name());
             }
+            auto updatedActor = actorOnLevel->second;
+            updatedActor->setObject(object);
+            showLoadedActor(
+                updatedActor->coords(),
+                updatedActor->object()->iconName(),
+                updatedActor->object()->name());
         }
-
+    }
 }
 
 void LevelController::saveLevel()

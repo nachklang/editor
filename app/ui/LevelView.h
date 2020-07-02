@@ -139,6 +139,12 @@ public:
             &LevelController::showLoadedActor,
             m_displayController.get(),
             &ActorDisplayController::showRepresentation);
+
+        QObject::connect(
+            m_levelController.get(),
+            &LevelController::hideDestroyedActor,
+            m_displayController.get(),
+            &ActorDisplayController::hideRepresentation);
     }
 
 signals:
