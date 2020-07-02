@@ -5,3 +5,5 @@ add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
 
 find_package (Threads)
 target_link_libraries(${PROJECT_NAME} editor_core gtest ${CMAKE_THREAD_LIBS_INIT})
+
+file(COPY examples DESTINATION ${CMAKE_BINARY_DIR}/tests/)

@@ -22,11 +22,13 @@ namespace editor {
 
 namespace {
 
+constexpr auto OBJECTS_FILE_NAME = "objects/objects.json";
+
 QWidget* CreateMainWindget()
 {
     auto reader = ConfigReader{};
     qDebug() << "App path : " << qApp->applicationDirPath();
-    auto object = reader.createJsonObjectFromFile("objects/objects.json");
+    auto object = reader.createJsonObjectFromFile(OBJECTS_FILE_NAME);
     auto types = reader.readObjectsFromJson(object);
 
     auto scene = std::make_shared<QGraphicsScene>();
@@ -45,7 +47,6 @@ QWidget* CreateMainWindget()
 
     levelViewLayout->addWidget(levelView);
     levelViewLayout->addWidget(new QSplitter);
-    // ReadFromFile
     levelViewLayout->addWidget(actorEditor);
 
     QObject::connect(

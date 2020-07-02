@@ -151,6 +151,8 @@ ActorEditor::ActorEditor(
     m_mainLayout = new QVBoxLayout;
     m_mainLayout->addWidget(m_actorTypeWidget);
     m_mainLayout->addLayout(m_propertiesLayout);
+    m_mainLayout->setAlignment(m_actorTypeWidget, Qt::AlignTop);
+    m_mainLayout->setAlignment(m_propertiesLayout, Qt::AlignTop);
 
     setLayout(m_mainLayout);
 }
@@ -178,6 +180,7 @@ void ActorEditor::receiveActiveActor(const std::shared_ptr<Actor> &actor)
 
         if (!m_saveButton)
         {
+            m_mainLayout->addItem(new QSpacerItem(30, 300));
             m_saveButton = new QPushButton("Save changes", m_actorTypeWidget);
             m_mainLayout->addWidget(m_saveButton);
 
@@ -220,6 +223,10 @@ void ActorEditor::receiveActiveActor(const std::shared_ptr<Actor> &actor)
 
             if (m_propertiesLayout->count())
             {
+                auto label = m_propertiesLayout->itemAt(0);
+                m_propertiesLayout->removeItem(label);
+                delete label;
+
                 for (auto counter = 0; counter < m_propertiesLayout->count();
                      ++counter)
                 {
@@ -229,6 +236,7 @@ void ActorEditor::receiveActiveActor(const std::shared_ptr<Actor> &actor)
                 m_propertiesWidgets.clear();
             }
 
+            m_propertiesLayout->addWidget(new QLabel ("Actor properties: "));
             createPropertiesWidgets(
                 object.value().properties(),
                 m_propertiesLayout,
@@ -305,6 +313,10 @@ void ActorEditor::onActorTypeChanged(const std::optional<Object> &object)
 
     if (m_propertiesLayout->count())
     {
+        auto label = m_propertiesLayout->itemAt(0);
+        m_propertiesLayout->removeItem(label);
+        delete label;
+
         for (auto counter = 0; counter < m_propertiesLayout->count(); ++counter)
         {
             m_propertiesLayout->removeItem(m_propertiesLayout->itemAt(counter));
@@ -314,6 +326,10 @@ void ActorEditor::onActorTypeChanged(const std::optional<Object> &object)
 
     if (object && object.value().properties())
     {
+        auto label = new QLabel ("Actor properties: ");
+        m_propertiesLayout->addWidget(label);
+        m_propertiesLayout->setAlignment(label, Qt::AlignHCenter);
+
         createPropertiesWidgets(
             object.value().properties(),
             m_propertiesLayout,

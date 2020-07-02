@@ -1,18 +1,22 @@
 {"types":[
     {
         "name":"TestTypeWithoutProperties",
-        "iconName":"without.png"
+        "iconName":"without.png",
+        "singlePlaceable" : true
     },
     {   "name":"TypeWithEmptyProperties",
         "iconName":"without2.png",
-        "properties":[]
+        "properties":[],
+        "singlePlaceable" : false
     },
     {
         "name":"TypeWithOneProperty",
         "iconName": "one.png",
+        "singlePlaceable" : true, 
         "properties":[{"name":"BooleanProperty",
                        "type": "boolean"}]
     }
+    ]
 }
 
 

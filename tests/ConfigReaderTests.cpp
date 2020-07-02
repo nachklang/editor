@@ -19,12 +19,12 @@ return string.toStdString();
 TEST(TestConfigReader, Positive)
 {
     auto reader = ConfigReader{};
-    reader.readFromFile("readerTest.json");
+    reader.readFromFile("examples/readerTest.json");
 }
 
 TEST(ReadPropertiesFromFile, Positive)
 {
-    constexpr auto TEST_FILE_NAME = "readProperty.json";
+    constexpr auto TEST_FILE_NAME = "examples/readProperty.json";
 
     auto reader = ConfigReader{};
     auto object = reader.createJsonObjectFromFile(TEST_FILE_NAME);
@@ -47,7 +47,7 @@ TEST(ReadPropertiesFromFile, Positive)
 
 TEST(ReadTypesFromFile, Positive)
 {
-    constexpr auto TEST_FILE_NAME = "test_objects.json";
+    constexpr auto TEST_FILE_NAME = "examples/test_objects.json";
 
     auto reader = ConfigReader{};
     auto object = reader.createJsonObjectFromFile(TEST_FILE_NAME);

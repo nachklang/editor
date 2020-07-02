@@ -12,7 +12,6 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QPushButton>
-#include <QSpacerItem>
 #include <QVBoxLayout>
 #include <QWidget>
 
