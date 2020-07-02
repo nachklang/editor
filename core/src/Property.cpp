@@ -54,4 +54,63 @@ std::shared_ptr<Property> createPropertyFromJson(const QJsonObject &object)
     return {};
 }
 
+QString Property::name()
+{
+    return m_name;
+}
+
+QString Property::type()
+{
+    return m_type;
+}
+
+std::any Property::value()
+{
+    return m_value;
+}
+
+BooleanProperty::BooleanProperty(const QString &name) :
+    Property(name, property::type::BOOLEAN_TYPE, false)
+{
+}
+
+void BooleanProperty::setValue(const bool &value)
+{
+    m_value.reset();
+    m_value = value;
+}
+
+void BooleanProperty::resetValue()
+{
+    m_value.reset();
+    m_value = false;
+}
+
+void BooleanProperty::serialize()
+{
+}
+
+std::shared_ptr<Property> BooleanProperty::clone()
+{
+    auto shared = std::make_shared<BooleanProperty>(*this);
+    return std::static_pointer_cast<Property>(shared);
+}
+
+RangedDoubleProperty::RangedDoubleProperty(const QString &name, const Range<double> &range) :
+    Property(name, property::type::RANGED_DOUBLE_TYPE, std::any{}), m_range(range)
+{
+}
+
+void RangedDoubleProperty::setValue(const double &value)
+{
+    m_value.reset();
+    m_value = value;
+}
+
+std::shared_ptr<Property> RangedDoubleProperty::clone()
+{
+    auto shared = std::make_shared<RangedDoubleProperty>(*this);
+    return std::static_pointer_cast<Property>(shared);
+}
+
 } // namespace editor

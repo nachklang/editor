@@ -157,32 +157,19 @@ void LevelController::openExistedLevel()
                     objectAtLevel.toObject()["properties"].toArray();
                 for (const auto& propertyJson: propertiesJson)
                 {
-                    qDebug() << "Property json name: "
-                             << propertyJson.toObject()["name"].toString();
-
                     auto objectProperties = object.value().properties().value();
 
                     auto findedProperty = std::find_if(
                         objectProperties.begin(),
                         objectProperties.end(),
                         [&propertyJson](const auto& propertyElement) {
-                            qDebug() << "Property element name"
-                                     << propertyElement->name();
-                            qDebug()
-                                << "Property json name: "
-                                << propertyJson.toObject()["name"].toString();
                             return propertyElement->name()
                                    == propertyJson.toObject()["name"].toString();
                         });
                     auto finded = *findedProperty;
 
-                    qDebug() << "Finded property exists"
-                             << static_cast<bool>(*findedProperty);
                     if (findedProperty != objectProperties.end())
                     {
-                        qDebug() << "Finded property exists"
-                                 << static_cast<bool>(*findedProperty);
-
                         auto tmp = (*findedProperty)->clone();
                         (*findedProperty) = tmp;
 

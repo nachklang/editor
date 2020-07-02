@@ -17,40 +17,24 @@ public:
         QString iconName,
         bool singlePlaceable,
         std::optional<Properties> properties = std::nullopt) :
-      m_name(name), m_iconName(iconName), m_singlePlaceable(singlePlaceable), m_properties(properties)
+      m_name(name),
+      m_iconName(iconName),
+      m_singlePlaceable(singlePlaceable),
+      m_properties(properties)
     {
     }
 
-    QString name() const
-    {
-        return m_name;
-    }
-    QString iconName() const
-    {
-        return m_iconName;
-    }
-    bool singlePlaceable() const
-    {
-        return m_singlePlaceable;
-    }
+    QString name() const;
 
-    std::optional<Properties> properties() const
-    {
-        return m_properties;
-    }
+    QString iconName() const;
 
-    void setProperties(const std::optional<Properties>& properties)
-    {
-        m_properties = properties;
-    }
+    bool singlePlaceable() const;
 
-    bool operator==(const Object& other)
-    {
-        return m_name == other.m_name &&
-                m_iconName == other.m_iconName &&
-                m_singlePlaceable == other.m_singlePlaceable &&
-                m_properties == other.m_properties;;
-    }
+    std::optional<Properties> properties() const;
+
+    void setProperties(const std::optional<Properties>& properties);
+
+    bool operator==(const Object& other);
 
     friend bool operator==(const Object& lhs, const Object& rhs);
 

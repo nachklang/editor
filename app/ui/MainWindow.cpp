@@ -30,7 +30,6 @@ constexpr auto OBJECTS_FILE_NAME = "objects/objects.json";
 Objects readObjectsFromConfig()
 {
     auto reader = ConfigReader{};
-    qDebug() << "App path : " << qApp->applicationDirPath();
     auto object = reader.createJsonObjectFromFile(OBJECTS_FILE_NAME);
     auto types = reader.readObjectsFromJson(object);
 
@@ -40,21 +39,15 @@ Objects readObjectsFromConfig()
 QWidget* CreateMainWindget(std::shared_ptr<LevelController>& levelController, const Objects& types)
 {
     auto scene = std::make_shared<QGraphicsScene>();
-
     auto displayController = std::make_shared<ActorDisplayController>(scene);
-
     auto actorEditor = new ActorEditor(types, displayController);
 
-
     auto levelViewLayout = new QHBoxLayout;
-
 
     auto tracker =
         std::shared_ptr<ActivityTracker>(new ActivityTracker);
 
     auto levelView = new LevelView(tracker, scene, displayController, levelController);
-
-
 
     levelViewLayout->addWidget(levelView);
     levelViewLayout->addWidget(new QSplitter);
@@ -105,7 +98,7 @@ MainWindow::MainWindow()
 
     const QIcon saveIcon = QIcon::fromTheme("document-save", QIcon(":/images/save.png"));
     QAction *saveAction = new QAction(openIcon, tr("&Save..."), this);
-    saveAction->setShortcuts(QKeySequence::Open);
+    saveAction->setShortcuts(QKeySequence::Save);
     saveAction->setStatusTip(tr("Save an existing level"));
     connect(saveAction, &QAction::triggered, levelController.get(), &LevelController::saveLevel);
 
@@ -116,8 +109,7 @@ MainWindow::MainWindow()
     auto mainWidget = CreateMainWindget(levelController, types);
     setCentralWidget(mainWidget);
 
-    setMinimumHeight(480);
-    setMinimumWidth(800);
+    setFixedSize(700,410);
 }
 
 }

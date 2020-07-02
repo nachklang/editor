@@ -65,20 +65,11 @@ public:
 
     virtual std::shared_ptr<Property> clone() = 0;
 
-    QString name()
-    {
-        return m_name;
-    }
+    QString name();
 
-    QString type()
-    {
-        return m_type;
-    }
+    QString type();
 
-    std::any value()
-    {
-        return m_value;
-    }
+    std::any value();
 };
 
 std::shared_ptr<Property> createPropertyFromJson(const QJsonObject& object);
@@ -86,64 +77,28 @@ std::shared_ptr<Property> createPropertyFromJson(const QJsonObject& object);
 class BooleanProperty : public Property
 {
 public:
-    BooleanProperty(const QString& name) :
-      Property(name, property::type::BOOLEAN_TYPE, false)
-    {
-    }
+    BooleanProperty(const QString& name);
 
-//    bool value()
-//    {
-//        return m_value;
-//    }
-    void setValue(const bool& value)
-    {
-        m_value.reset();
-        m_value = value;
-    }
+    void setValue(const bool& value);
 
-    void resetValue() override
-    {
-        m_value.reset();
-        m_value = false;
-    }
+    void resetValue() override;
 
-    void serialize() override
-    {
-    }
+    void serialize() override;
 
-    std::shared_ptr<Property> clone() override
-    {
-        auto shared = std::make_shared<BooleanProperty>(*this);
-        return std::static_pointer_cast<Property>(shared);
-    }
-
-
-//private:
-//    bool m_value;
+    std::shared_ptr<Property> clone() override;
 };
 
 class RangedDoubleProperty : public Property
 {
 public:
-    RangedDoubleProperty(const QString& name, const Range<double>& range) :
-        Property(name, property::type::RANGED_DOUBLE_TYPE, std::any{}), m_range(range)
-    {
-    }
+    RangedDoubleProperty(const QString& name, const Range<double>& range);
 
 private:
     Range<double> m_range;
 
 public:
-//    double value()
-//    {
-//        return m_value;
-//    }
 
-    void setValue(const double& value)
-    {
-        m_value.reset();
-        m_value = value;
-    }
+    void setValue(const double& value);
 
     void resetValue() override
     {
@@ -153,11 +108,7 @@ public:
 
     Range<double> range(){return m_range;}
 
-    std::shared_ptr<Property> clone() override
-    {
-        auto shared = std::make_shared<RangedDoubleProperty>(*this);
-        return std::static_pointer_cast<Property>(shared);
-    }
+    std::shared_ptr<Property> clone() override;
 
 public:
     void serialize() override

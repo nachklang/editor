@@ -49,6 +49,14 @@ void Actor::setObject(const std::optional<Object> &object)
     m_object = object;
 }
 
+bool operator==(const Actor &actor, const Actor &other)
+{
+    return actor.m_position == other.m_position
+           && actor.m_coords == other.m_coords
+           && actor.m_object == other.m_object && actor.m_icon == other.m_icon
+           && actor.m_alias == other.m_alias;
+}
+
 void Actor::mousePressEvent(QGraphicsSceneMouseEvent *)
 {
     toggleActivated();
@@ -64,7 +72,6 @@ std::shared_ptr<Actor> ActorProxy::value()
 {
     return m_actor;
 }
-
 
 bool operator==(const Position &position, const Position &other)
 {

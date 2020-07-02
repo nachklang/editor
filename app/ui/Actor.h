@@ -4,8 +4,6 @@
 
 #include "editor/Object.h"
 
-#include <QDebug>
-
 #include <QGraphicsProxyWidget>
 #include <QGraphicsRectItem>
 #include <QPen>
@@ -41,23 +39,7 @@ public:
     std::optional<Object> object();
     void setObject(const std::optional<Object>& object);
 
-//    bool operator==(const Actor& other)
-//    {
-//        return m_position == other.m_position &&
-//                m_coords == other.m_coords &&
-//                m_object == other.m_object &&
-//                m_icon == other.m_icon &&
-//                m_alias == other.m_alias;
-//    }
-
-    friend bool operator==(const Actor& actor, const Actor& other)
-    {
-        return actor.m_position == other.m_position &&
-                actor.m_coords == other.m_coords &&
-                actor.m_object == other.m_object &&
-                actor.m_icon == other.m_icon &&
-                actor.m_alias == other.m_alias;
-    }
+    friend bool operator==(const Actor& actor, const Actor& other);
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent*);

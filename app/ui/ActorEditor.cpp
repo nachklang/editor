@@ -15,7 +15,7 @@ ActorTypeWidget::ActorTypeWidget(const std::optional<Objects> &objects) :
     auto mainLayout = new QVBoxLayout;
     mainLayout->addLayout(layout);
 
-    setLayout(mainLayout);
+    //setLayout(mainLayout);
 
     m_comboBox->addItem("");
     if (objects)
@@ -42,6 +42,11 @@ ActorTypeWidget::ActorTypeWidget(const std::optional<Objects> &objects) :
     };
 
     QObject::connect(m_comboBox, &QComboBox::currentTextChanged, slot);
+    QObject::connect(
+        m_comboBox,
+        QOverload<int>::of(&QComboBox::currentIndexChanged),
+        this,
+        &ActorTypeWidget::currentIndexChanged);
 }
 
 bool ActorTypeWidget::hasValidType()
@@ -81,7 +86,8 @@ void RangedDoubleWidget::init()
         m_spinBox->setRange(min, max);
         m_spinBox->setToolTip(QString{"From %1 to %2"}.arg(min, max));
         auto value = m_property->value();
-        m_spinBox->setValue(value.has_value() ? std::any_cast<double>(value) : 0.0);
+        m_spinBox->setValue(
+            value.has_value() ? std::any_cast<double>(value) : 0.0);
         layout->addWidget(m_spinBox);
     }
     setLayout(layout);
@@ -102,7 +108,8 @@ void BooleanWidget::init()
     m_comboBox = new QComboBox;
     m_comboBox->addItem("true", QVariant{true});
     m_comboBox->addItem("false", QVariant{false});
-    m_comboBox->setCurrentIndex(std::any_cast<bool>(m_property->value()) ? 0 : 1);
+    m_comboBox->setCurrentIndex(
+        std::any_cast<bool>(m_property->value()) ? 0 : 1);
 
     layout->addWidget(m_comboBox);
 
@@ -150,7 +157,25 @@ ActorEditor::ActorEditor(
 
     m_mainLayout = new QVBoxLayout;
     m_mainLayout->addWidget(m_actorTypeWidget);
-    m_mainLayout->addLayout(m_propertiesLayout);
+
+    auto propertiesLabel = new QLabel("Actor properties: ");
+    m_mainLayout->addWidget(propertiesLabel);
+    m_mainLayout->setAlignment(propertiesLabel, Qt::AlignHCenter);
+
+    if (!m_actorTypeWidget->hasValidType())
+    {
+        propertiesLabel->hide();
+    }
+    QObject::connect(
+        m_actorTypeWidget,
+        &ActorTypeWidget::currentIndexChanged,
+        this,
+        [=]() {
+            m_actorTypeWidget->hasValidType() ? propertiesLabel->show() :
+                                                propertiesLabel->hide();
+        });
+
+        m_mainLayout->addLayout(m_propertiesLayout);
     m_mainLayout->setAlignment(m_actorTypeWidget, Qt::AlignTop);
     m_mainLayout->setAlignment(m_propertiesLayout, Qt::AlignTop);
 
@@ -159,7 +184,6 @@ ActorEditor::ActorEditor(
 
 void ActorEditor::receiveActiveActor(const std::shared_ptr<Actor> &actor)
 {
-    qDebug() << "Receiving object!";
     m_activeActor = actor;
 
     if (actor)
@@ -167,7 +191,6 @@ void ActorEditor::receiveActiveActor(const std::shared_ptr<Actor> &actor)
         auto object = actor->object();
         if (!m_actorTypeWidget)
         {
-            // delete m_actorTypeWidget;
             m_actorTypeWidget = new ActorTypeWidget(m_objects);
             m_mainLayout->addWidget(m_actorTypeWidget);
         }
@@ -180,7 +203,7 @@ void ActorEditor::receiveActiveActor(const std::shared_ptr<Actor> &actor)
 
         if (!m_saveButton)
         {
-            m_mainLayout->addItem(new QSpacerItem(30, 300));
+            m_mainLayout->addItem(new QSpacerItem(0, 300));
             m_saveButton = new QPushButton("Save changes", m_actorTypeWidget);
             m_mainLayout->addWidget(m_saveButton);
 
@@ -218,24 +241,19 @@ void ActorEditor::receiveActiveActor(const std::shared_ptr<Actor> &actor)
                 &ActorEditor::saveObjectToActor);
         }
 
+        if (m_propertiesLayout->count())
+        {
+            for (auto counter = 0; counter < m_propertiesLayout->count();
+                 ++counter)
+            {
+                m_propertiesLayout->removeItem(
+                    m_propertiesLayout->itemAt(counter));
+            }
+            m_propertiesWidgets.clear();
+        }
+
         if (object && object.value().properties())
         {
-            if (m_propertiesLayout->count())
-            {
-                auto label = m_propertiesLayout->itemAt(0);
-                m_propertiesLayout->removeItem(label);
-                delete label;
-
-                for (auto counter = 0; counter < m_propertiesLayout->count();
-                     ++counter)
-                {
-                    m_propertiesLayout->removeItem(
-                        m_propertiesLayout->itemAt(counter));
-                }
-                m_propertiesWidgets.clear();
-            }
-
-            m_propertiesLayout->addWidget(new QLabel ("Actor properties: "));
             createPropertiesWidgets(
                 object.value().properties(),
                 m_propertiesLayout,
@@ -257,8 +275,6 @@ void ActorEditor::saveObjectToActor()
 
         if (it != m_objects.value().end())
         {
-            qDebug() << it->name();
-
             auto object = *it;
             auto properties = Properties{};
 
@@ -303,18 +319,8 @@ void ActorEditor::saveObjectToActor()
 
 void ActorEditor::onActorTypeChanged(const std::optional<Object> &object)
 {
-    if (object)
-    {
-        qDebug() << "ActorEditor::onActorTypeChanged(): "
-                 << "name: " << object.value().name();
-    }
-
     if (m_propertiesLayout->count())
     {
-        auto label = m_propertiesLayout->itemAt(0);
-        m_propertiesLayout->removeItem(label);
-        delete label;
-
         for (auto counter = 0; counter < m_propertiesLayout->count(); ++counter)
         {
             m_propertiesLayout->removeItem(m_propertiesLayout->itemAt(counter));
@@ -324,16 +330,10 @@ void ActorEditor::onActorTypeChanged(const std::optional<Object> &object)
 
     if (object && object.value().properties())
     {
-        auto label = new QLabel ("Actor properties: ");
-        m_propertiesLayout->addWidget(label);
-        m_propertiesLayout->setAlignment(label, Qt::AlignHCenter);
-
         createPropertiesWidgets(
             object.value().properties(),
             m_propertiesLayout,
             m_propertiesWidgets);
-
-        qDebug() << "PropertiesWidgets size: " << m_propertiesWidgets.size();
     }
 }
 

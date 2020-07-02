@@ -7,7 +7,6 @@
 #include "editor/Property.h"
 
 #include <QComboBox>
-#include <QDebug>
 #include <QDoubleSpinBox>
 #include <QGridLayout>
 #include <QLabel>
@@ -33,6 +32,7 @@ public:
     void setCurrentIndex(const std::optional<Object>& object);
 signals:
     void typeChanged(const std::optional<Object>& object);
+    void currentIndexChanged();
 
 private:
     QComboBox* m_comboBox;
