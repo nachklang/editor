@@ -16,6 +16,8 @@ struct Position
 {
     int m_x;
     int m_y;
+
+    friend bool operator==(const Position& position, const Position& other);
 };
 
 class Actor : public QGraphicsRectItem,
@@ -32,10 +34,30 @@ public:
 
     void toggleActivated();
 
+    Position position();
+
     QRectF coords();
 
     std::optional<Object> object();
     void setObject(const std::optional<Object>& object);
+
+//    bool operator==(const Actor& other)
+//    {
+//        return m_position == other.m_position &&
+//                m_coords == other.m_coords &&
+//                m_object == other.m_object &&
+//                m_icon == other.m_icon &&
+//                m_alias == other.m_alias;
+//    }
+
+    friend bool operator==(const Actor& actor, const Actor& other)
+    {
+        return actor.m_position == other.m_position &&
+                actor.m_coords == other.m_coords &&
+                actor.m_object == other.m_object &&
+                actor.m_icon == other.m_icon &&
+                actor.m_alias == other.m_alias;
+    }
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent*);

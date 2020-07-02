@@ -80,7 +80,8 @@ void RangedDoubleWidget::init()
         auto max = m_property->range().m_max;
         m_spinBox->setRange(min, max);
         m_spinBox->setToolTip(QString{"From %1 to %2"}.arg(min, max));
-        m_spinBox->setValue(m_property->value());
+        auto value = m_property->value();
+        m_spinBox->setValue(value.has_value() ? std::any_cast<double>(value) : 0.0);
         layout->addWidget(m_spinBox);
     }
     setLayout(layout);
@@ -101,7 +102,7 @@ void BooleanWidget::init()
     m_comboBox = new QComboBox;
     m_comboBox->addItem("true", QVariant{true});
     m_comboBox->addItem("false", QVariant{false});
-    m_comboBox->setCurrentIndex(m_property->value() ? 0 : 1);
+    m_comboBox->setCurrentIndex(std::any_cast<bool>(m_property->value()) ? 0 : 1);
 
     layout->addWidget(m_comboBox);
 
@@ -111,7 +112,6 @@ void BooleanWidget::init()
 void ActorEditor::createPropertiesWidgets(
     const std::optional<Properties> &properties,
     QVBoxLayout *sublayout,
-    QPushButton *saveButton,
     std::vector<std::shared_ptr<PropertyBaseWidget>> &propertiesWidgets)
 {
     if (properties)
@@ -121,12 +121,12 @@ void ActorEditor::createPropertiesWidgets(
             if (property->type() == property::type::BOOLEAN_TYPE)
             {
                 createPropertyWidget<BooleanWidget, BooleanProperty>(
-                    sublayout, saveButton, property, propertiesWidgets);
+                    sublayout, property, propertiesWidgets);
             }
             else if (property->type() == property::type::RANGED_DOUBLE_TYPE)
             {
                 createPropertyWidget<RangedDoubleWidget, RangedDoubleProperty>(
-                    sublayout, saveButton, property, propertiesWidgets);
+                    sublayout, property, propertiesWidgets);
             }
         }
     }
@@ -220,7 +220,6 @@ void ActorEditor::receiveActiveActor(const std::shared_ptr<Actor> &actor)
 
         if (object && object.value().properties())
         {
-
             if (m_propertiesLayout->count())
             {
                 auto label = m_propertiesLayout->itemAt(0);
@@ -240,7 +239,6 @@ void ActorEditor::receiveActiveActor(const std::shared_ptr<Actor> &actor)
             createPropertiesWidgets(
                 object.value().properties(),
                 m_propertiesLayout,
-                m_saveButton,
                 m_propertiesWidgets);
         }
     }
@@ -333,7 +331,6 @@ void ActorEditor::onActorTypeChanged(const std::optional<Object> &object)
         createPropertiesWidgets(
             object.value().properties(),
             m_propertiesLayout,
-            m_saveButton,
             m_propertiesWidgets);
 
         qDebug() << "PropertiesWidgets size: " << m_propertiesWidgets.size();

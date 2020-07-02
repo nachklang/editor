@@ -29,6 +29,11 @@ void Actor::toggleActivated()
     setPen(m_isActive ? pen : blackPen);
 }
 
+Position Actor::position()
+{
+    return m_position;
+}
+
 QRectF Actor::coords()
 {
     return m_coords;
@@ -60,3 +65,8 @@ std::shared_ptr<Actor> ActorProxy::value()
     return m_actor;
 }
 
+
+bool operator==(const Position &position, const Position &other)
+{
+    return position.m_x == other.m_x && position.m_y == other.m_y;
+}

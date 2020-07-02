@@ -1,13 +1,35 @@
 #pragma once
 
-class LevelController: public QObject
+#include "Actor.h"
+
+#include "editor/Object.h"
+
+class LevelController : public QObject
 {
     Q_OBJECT
 
 public:
-    void CreateNewLevel();
+    LevelController(const std::vector<Object>& objects) : m_objects(objects)
+    {
+    }
 
-    void OpenExistedLevel();
+    void createNewLevel();
 
-    void SaveLevel();
+    void openExistedLevel();
+
+    void saveLevel();
+
+    void setActorsOnScene(
+        const std::map<std::shared_ptr<ActorProxy>, std::shared_ptr<Actor>>&
+            actorsOnScene);
+signals:
+    void showLoadedActor(
+        const QRectF coords,
+        const std::optional<QString>& iconName,
+        const std::optional<QString>& aliasName);
+
+private:
+    std::vector<Object> m_objects;
+    std::map<std::shared_ptr<ActorProxy>, std::shared_ptr<Actor>>
+        m_actorsOnScene;
 };

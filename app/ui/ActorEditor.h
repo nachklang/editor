@@ -39,11 +39,13 @@ private:
     std::optional<Objects> m_objects;
 };
 
-class PropertyBaseWidget: public QWidget
+class PropertyBaseWidget : public QWidget
 {
     Q_OBJECT
 public:
-    virtual ~PropertyBaseWidget(){}
+    virtual ~PropertyBaseWidget()
+    {
+    }
 
     virtual void init() = 0;
 
@@ -51,7 +53,6 @@ public:
 
 public slots:
     virtual void onChangedComplete() = 0;
-
 };
 
 class RangedDoubleWidget : public PropertyBaseWidget
@@ -82,7 +83,6 @@ class BooleanWidget : public PropertyBaseWidget
 {
     Q_OBJECT
 public:
-
     BooleanWidget(const std::shared_ptr<editor::BooleanProperty>& property);
 
     void init() override;
@@ -106,8 +106,8 @@ private:
 template <typename PropertyWidget, typename PropertyType>
 void createPropertyWidget(
     QVBoxLayout* layout,
-    QPushButton* ,
-    const std::shared_ptr<editor::Property>& property, std::vector<std::shared_ptr<PropertyBaseWidget>>& propertiesWidgets)
+    const std::shared_ptr<editor::Property>& property,
+    std::vector<std::shared_ptr<PropertyBaseWidget>>& propertiesWidgets)
 {
     auto propertyWidget = std::shared_ptr<PropertyBaseWidget>();
     propertyWidget.reset(
@@ -126,11 +126,12 @@ class ActorEditor : public QWidget
     void createPropertiesWidgets(
         const std::optional<Properties>& properties,
         QVBoxLayout* sublayout,
-        QPushButton* saveButton,std::vector<std::shared_ptr<PropertyBaseWidget>>& propertiesWidgets
-            );
+        std::vector<std::shared_ptr<PropertyBaseWidget>>& propertiesWidgets);
 
 public:
-    ActorEditor(const std::optional<Objects>& objects, std::shared_ptr<ActorDisplayController> displayController);
+    ActorEditor(
+        const std::optional<Objects>& objects,
+        std::shared_ptr<ActorDisplayController> displayController);
 
 public slots:
     void receiveActiveActor(const std::shared_ptr<Actor>& actor);

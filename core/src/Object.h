@@ -44,6 +44,16 @@ public:
         m_properties = properties;
     }
 
+    bool operator==(const Object& other)
+    {
+        return m_name == other.m_name &&
+                m_iconName == other.m_iconName &&
+                m_singlePlaceable == other.m_singlePlaceable &&
+                m_properties == other.m_properties;;
+    }
+
+    friend bool operator==(const Object& lhs, const Object& rhs);
+
 private:
     QString m_name;
     QString m_iconName;

@@ -4,6 +4,8 @@
 
 #include "ActorDisplayController.h"
 
+#include "LevelController.h"
+
 #include <QDebug>
 #include <QGraphicsProxyWidget>
 #include <QGraphicsWidget>
@@ -39,8 +41,12 @@ public:
     LevelView(
         const std::shared_ptr<ActivityTracker>& tracker,
         const std::shared_ptr<QGraphicsScene>& scene,
-            const std::shared_ptr<ActorDisplayController>& displayController) :
-      m_tracker(tracker), m_scene(scene), m_displayController(displayController)
+        const std::shared_ptr<ActorDisplayController>& displayController,
+        const std::shared_ptr<LevelController>& levelController) :
+      m_tracker(tracker),
+      m_scene(scene),
+      m_displayController(displayController),
+      m_levelController(levelController)
     {
         auto layout = new QVBoxLayout;
         auto label = new QLabel("LEVEL VIEW WIDGET");
@@ -74,8 +80,8 @@ public:
             this,
             &LevelView::onActorActivated);
 
-        static auto ptr_map = std::
-            map<std::shared_ptr<ActorProxy>, std::shared_ptr<Actor>>{};
+        static auto ptr_map =
+            std::map<std::shared_ptr<ActorProxy>, std::shared_ptr<Actor>>{};
 
         for (auto i = 0; i < 10; ++i)
         {
@@ -112,6 +118,7 @@ public:
         }
 
         m_displayController->setActorsScene(ptr_map);
+        m_levelController->setActorsOnScene(ptr_map);
 
         qDebug() << grid->itemAt(10);
 
@@ -126,6 +133,12 @@ public:
         layout->addWidget(view);
 
         setLayout(layout);
+
+        QObject::connect(
+            m_levelController.get(),
+            &LevelController::showLoadedActor,
+            m_displayController.get(),
+            &ActorDisplayController::showRepresentation);
     }
 
 signals:
@@ -140,6 +153,7 @@ private:
     std::shared_ptr<ActivityTracker> m_tracker;
     std::shared_ptr<QGraphicsScene> m_scene;
     std::shared_ptr<ActorDisplayController> m_displayController;
+    std::shared_ptr<LevelController> m_levelController;
 };
 
 } // namespace editor

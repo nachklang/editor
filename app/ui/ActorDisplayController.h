@@ -23,8 +23,9 @@ struct ActorDisplayData
 
 using ActorsDisplayStorage = std::map<QString, ActorDisplayData>;
 
-class ActorDisplayController
+class ActorDisplayController: public QObject
 {
+    Q_OBJECT
 public:
     ActorDisplayController(const std::shared_ptr<QGraphicsScene>& scene);
 

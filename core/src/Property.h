@@ -3,6 +3,7 @@
 #include <QJsonObject>
 #include <QString>
 
+#include <any>
 #include <memory>
 
 namespace editor
@@ -33,6 +34,8 @@ struct Range
     T m_min;
     T m_max;
 
+    Range(){}
+
     Range(double min, double max) : m_min(std::move(min)), m_max(std::move(max))
     {
     }
@@ -45,14 +48,15 @@ public:
     {
     }
 
-    Property(const QString& name, const QString& type) :
-      m_name(name), m_type(type)
+    Property(const QString& name, const QString& type, const std::any& value) :
+      m_name(name), m_type(type), m_value(value)
     {
     }
 
 protected:
     QString m_name;
     QString m_type;
+    std::any m_value;
 
 public:
     virtual void serialize() = 0;
@@ -70,6 +74,11 @@ public:
     {
         return m_type;
     }
+
+    std::any value()
+    {
+        return m_value;
+    }
 };
 
 std::shared_ptr<Property> createPropertyFromJson(const QJsonObject& object);
@@ -78,22 +87,23 @@ class BooleanProperty : public Property
 {
 public:
     BooleanProperty(const QString& name) :
-      Property(name, property::type::BOOLEAN_TYPE),
-      m_value(false)
+      Property(name, property::type::BOOLEAN_TYPE, false)
     {
     }
 
-    bool value()
-    {
-        return m_value;
-    }
+//    bool value()
+//    {
+//        return m_value;
+//    }
     void setValue(const bool& value)
     {
+        m_value.reset();
         m_value = value;
     }
 
     void resetValue() override
     {
+        m_value.reset();
         m_value = false;
     }
 
@@ -108,35 +118,36 @@ public:
     }
 
 
-private:
-    bool m_value;
+//private:
+//    bool m_value;
 };
 
 class RangedDoubleProperty : public Property
 {
 public:
     RangedDoubleProperty(const QString& name, const Range<double>& range) :
-      Property(name, property::type::RANGED_DOUBLE_TYPE), m_range(range)
+        Property(name, property::type::RANGED_DOUBLE_TYPE, std::any{}), m_range(range)
     {
     }
 
 private:
     Range<double> m_range;
-    double m_value;
 
 public:
-    double value()
-    {
-        return m_value;
-    }
+//    double value()
+//    {
+//        return m_value;
+//    }
 
     void setValue(const double& value)
     {
+        m_value.reset();
         m_value = value;
     }
 
     void resetValue() override
     {
+        m_value.reset();
         m_value = m_range.m_min;
     }
 
